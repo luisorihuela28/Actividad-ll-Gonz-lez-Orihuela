@@ -1,0 +1,80 @@
+0001   0000             ; ---------------------------------------------------------
+0002   0000             ; Programa: Calculo de la raíz cuadrada de un número en BCD
+0003   0000             ; Autor: González Orihuela Luis Ángel
+0004   0000             ; ITSE - Ingeniería en Telecomunicaciones, Sistemas y Electrónica
+0005   0000             ; Fecha: 13 de Septiembre de 2024
+0006   0000             ; ---------------------------------------------------------
+0007   0000             
+0008   0000                     ORG 0000h         ; Comienzo del código en la dirección 0
+0009   0000             
+0010   0000                     ; Cargar el número en BCD desde el registro B al acumulador
+0011   0000 78                  LD A, B           
+0012   0001                     
+0013   0001                     ; Conversión de BCD a binario
+0014   0001 4F                  LD C, A           ; Guardar el valor de BCD en C
+0015   0002 E6 0F               AND 0Fh           ; Obtener las unidades
+0016   0004 5F                  LD E, A           ; Guardar las unidades en E
+0017   0005 79                  LD A, C           ; Cargar nuevamente el valor original en A
+0018   0006 CB 3F               SRL A             ; Desplazar 4 bits a la derecha
+0019   0008 CB 3F               SRL A             ; Mover el valor a la derecha 2 veces
+0020   000A CB 3F               SRL A             ; (equivalente a dividir entre 16)
+0021   000C CB 3F               SRL A
+0022   000E 87                  ADD A, A          ; Multiplicar por 10 (decenas * 10)
+0023   000F 87                  ADD A, A
+0024   0010 87                  ADD A, A
+0025   0011 87                  ADD A, A
+0026   0012 87                  ADD A, A
+0027   0013 83                  ADD A, E          ; Sumar las unidades al resultado
+0028   0014 47                  LD B, A           ; Ahora B contiene el valor en binario
+0029   0015             
+0030   0015                     ; Calcular la raíz cuadrada de B
+0031   0015 AF                  XOR A             ; Inicializar el acumulador en 0
+0032   0016 4F                  LD C, A           ; Inicializar el registro C (posible raíz cuadrada)
+0033   0017                     
+0034   0017             CALC_RAIZ:
+0035   0017 0C                  INC C             ; Incrementar la raíz candidata
+0036   0018 79                  LD A, C           ; Cargar C en A
+0037   0019 5F                  LD E, A           ; Guardar el valor en E para evitar alteraciones
+0038   001A             
+0039   001A                     ; Multiplicar A * A usando sumas repetitivas
+0040   001A 79                  LD A, C           ; Cargar el valor de C en A
+0041   001B 51                  LD D, C           ; Guardar el valor de C en D
+0042   001C AF                  XOR A             ; Inicializar A en 0
+0043   001D             MULTIPLY:
+0044   001D 82                  ADD A, D          ; Sumar D (C) a A
+0045   001E 0D                  DEC C             ; Decrementar C
+0046   001F 20 FC               JR NZ, MULTIPLY   ; Repetir hasta que C sea 0
+0047   0021             
+0048   0021 B8                  CP B              ; Comparar A (C^2) con el valor original
+0049   0022 38 F3               JR C, CALC_RAIZ   ; Si el cuadrado es menor que el número, continuar
+0050   0024             
+0051   0024 0D                  DEC C             ; Decrementar C porque la última comparación falló
+0052   0025             
+0053   0025                     ; Conversión de binario a BCD (el resultado de la raíz está en C)
+0054   0025 79                  LD A, C           ; Cargar el valor de la raíz en A
+0055   0026 26 00               LD H, 0           ; Inicializar H en 0
+0056   0028 6F                  LD L, A           ; Guardar el valor en L
+0057   0029             
+0058   0029 16 00               LD D, 0           ; Iniciar el contador para decenas
+0059   002B 1E 00               LD E, 0           ; Iniciar el contador para unidades
+0060   002D             
+0061   002D             CONV_BIN_TO_BCD:
+0062   002D FE 0A               CP 10             ; Comparar si el valor en A es mayor o igual a 10
+0063   002F 38 05               JR C, FIN_CONV    ; Si es menor que 10, pasar al siguiente paso
+0064   0031 D6 0A               SUB 10            ; Restar 10 para extraer la decena
+0065   0033 14                  INC D             ; Incrementar el contador de decenas
+0066   0034 18 F7               JR CONV_BIN_TO_BCD; Repetir el proceso hasta que A < 10
+0067   0036             
+0068   0036             FIN_CONV:
+0069   0036 5F                  LD E, A           ; Guardar las unidades restantes en E
+0070   0037 7A                  LD A, D           ; Cargar las decenas en A
+0071   0038 CB 27               SLA A             ; Desplazar a la izquierda 4 veces para formar el BCD
+0072   003A CB 27               SLA A
+0073   003C CB 27               SLA A
+0074   003E CB 27               SLA A
+0075   0040 B3                  OR E              ; Combinar con las unidades para obtener el BCD completo
+0076   0041 4F                  LD C, A           ; Guardar el resultado final en C
+0077   0042             
+0078   0042 C9                  RET               ; Finalizar el programa
+0079   0043                   
+Number of errors = 0
